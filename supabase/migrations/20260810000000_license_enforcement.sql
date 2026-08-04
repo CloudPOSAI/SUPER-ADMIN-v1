@@ -26,13 +26,16 @@ ALTER TABLE public.organizations
 CREATE INDEX IF NOT EXISTS idx_organizations_license_expiry
   ON public.organizations (license_expires_at, license_status);
 
--- Backfill existing organizations with a 1-year license from now
--- (They were created before licensing existed, so we grant them a fresh year)
+-- Backfill existing organizations with a 1-year license from their creation date
 UPDATE public.organizations
-SET license_starts_at = now(),
-    license_expires_at = now() + interval '1 year',
-    license_grace_ends_at = now() + interval '1 year' + interval '30 days',
-    license_status = 'active'
+SET license_starts_at = created_at,
+    license_expires_at = created_at + interval '1 year',
+    license_grace_ends_at = created_at + interval '1 year' + interval '30 days',
+    license_status = CASE
+      WHEN (created_at + interval '1 year' + interval '30 days') < now() THEN 'expired'
+      WHEN (created_at + interval '1 year') < now() THEN 'grace_period'
+      ELSE 'active'
+    END
 WHERE license_status = 'active';
 
 -- ---------------------------------------------------------------------------
