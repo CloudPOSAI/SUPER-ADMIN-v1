@@ -193,133 +193,38 @@ Deno.serve(async (req) => {
     const userId = authData.user.id;
 
     // -----------------------------------------------------------------------
-    // 5. Atomic Database Provisioning via SQL Transaction
+    // 5. Atomic Database Provisioning via SQL RPC Transaction
     // -----------------------------------------------------------------------
-    // Using a single SQL transaction via RPC to ensure atomicity.
-    // If any step fails, everything rolls back including the auth user cleanup.
-
-    const provisionSQL = `
-      DO $$
-      DECLARE
-        v_user_id uuid := '${userId}'::uuid;
-        v_org_id uuid := gen_random_uuid();
-        v_branch_id uuid := gen_random_uuid();
-        v_stock_loc_id uuid := gen_random_uuid();
-        v_terminal_id uuid := gen_random_uuid();
-        v_printer_id uuid := gen_random_uuid();
-        v_role_id uuid;
-        v_plan_id uuid;
-      BEGIN
-        -- Lookup app role
-        SELECT id INTO v_role_id FROM public.app_roles
-          WHERE name = '${roleName}' LIMIT 1;
-        IF v_role_id IS NULL THEN
-          RAISE EXCEPTION 'App role "%" not found in public.app_roles', '${roleName}';
-        END IF;
-
-        -- Lookup default plan (optional, may not exist)
-        SELECT id INTO v_plan_id FROM public.plans
-          WHERE code = 'enterprise_annual' AND is_active = true LIMIT 1;
-
-        -- (a) Create application user profile
-        INSERT INTO public.users (id, email, name, is_active, totp_enabled, failed_auth_attempts)
-        VALUES (v_user_id, '${body.user_email}', '${body.user_name}', true, false, 0);
-
-        -- (b) Create organization with license
-        INSERT INTO public.organizations (
-          id, legal_name, trade_name, country_code, status,
-          license_status, license_starts_at, license_expires_at
-        ) VALUES (
-          v_org_id,
-          '${body.legal_name}',
-          '${body.trade_name || body.legal_name}',
-          '${countryCode}',
-          'active',
-          'active',
-          now(),
-          now() + interval '${licenseDays} days'
-        );
-
-        -- (c) Create subscription if plan exists
-        IF v_plan_id IS NOT NULL THEN
-          INSERT INTO public.subscriptions (organization_id, plan_id, status, current_period_end)
-          VALUES (v_org_id, v_plan_id, 'active', now() + interval '${licenseDays} days');
-        END IF;
-
-        -- (d) Create branch
-        INSERT INTO public.branches (id, organization_id, name, branch_code, status)
-        VALUES (v_branch_id, v_org_id, '${body.branch_name}', '${body.branch_code}', 'active');
-
-        -- (e) Create stock location
-        INSERT INTO ims.stock_locations (id, organization_id, branch_id, code, name, kind, is_active)
-        VALUES (v_stock_loc_id, v_org_id, v_branch_id, '${body.stock_location_code}', '${stockName}', '${stockKind}', true);
-
-        -- (f) Create organization membership
-        INSERT INTO public.organization_memberships (organization_id, user_id, member_type, role_id, status)
-        VALUES (v_org_id, v_user_id, '${memberType}', v_role_id, 'active');
-
-        -- (g) Create staff branch access (required for 'staff' member_type)
-        ${memberType === "staff" ? `INSERT INTO public.staff_branch_access (organization_id, user_id, branch_id, status) VALUES (v_org_id, v_user_id, v_branch_id, 'active');` : "-- Owner/auditor bypass branch access check"}
-
-        -- (h) Create POS terminal
-        INSERT INTO public.terminals (id, organization_id, branch_id, terminal_code, device_type, status)
-        VALUES (v_terminal_id, v_org_id, v_branch_id, '${body.terminal_code}', '${deviceType}', 'active');
-
-        -- (i) Create receipt printer
-        INSERT INTO public.printers (id, organization_id, branch_id, name, type, status, is_default)
-        VALUES (v_printer_id, v_org_id, v_branch_id, '${printerName}', '${printerType}', 'connected', true);
-
-        -- Return IDs via RAISE NOTICE (captured in logs)
-        RAISE NOTICE 'ONBOARD_SUCCESS: org=%, branch=%, user=%, terminal=%, printer=%',
-          v_org_id, v_branch_id, v_user_id, v_terminal_id, v_printer_id;
-      END $$;
-    `;
-
-    const { error: provisionError } = await adminClient.rpc("", {}).then(
-      () => ({ error: null }),
-      (err: Error) => ({ error: err })
-    );
-
-    // Execute raw SQL via the REST endpoint
-    const sqlResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/rpc/`,
+    const { data: rpcResult, error: rpcError } = await adminClient.rpc(
+      "provision_tenant_atomic",
       {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          apikey: SUPABASE_SERVICE_ROLE_KEY,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal",
-        },
+        p_user_id: userId,
+        p_user_email: body.user_email,
+        p_user_name: body.user_name,
+        p_legal_name: body.legal_name,
+        p_trade_name: body.trade_name || body.legal_name,
+        p_country_code: countryCode,
+        p_license_days: licenseDays,
+        p_branch_name: body.branch_name,
+        p_branch_code: body.branch_code,
+        p_stock_code: body.stock_location_code,
+        p_stock_name: stockName,
+        p_stock_kind: stockKind,
+        p_member_type: memberType,
+        p_role_name: roleName,
+        p_terminal_code: body.terminal_code,
+        p_device_type: deviceType,
+        p_printer_name: printerName,
+        p_printer_type: printerType,
       }
     );
 
-    // Actually execute the SQL directly via postgres
-    const { data: sqlResult, error: sqlError } = await adminClient
-      .from("_exec")
-      .select()
-      .limit(0);
-
-    // Use the management API query endpoint instead
-    const queryResponse = await fetch(
-      `${SUPABASE_URL}/pg/query`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: provisionSQL }),
-      }
-    );
-
-    if (!queryResponse.ok) {
+    if (rpcError) {
       // Rollback: delete the auth user we just created
       await adminClient.auth.admin.deleteUser(userId);
-      const errorText = await queryResponse.text();
       return new Response(
         JSON.stringify({
-          error: `Database provisioning failed: ${errorText}`,
+          error: `Database provisioning failed: ${rpcError.message}`,
           rollback: "Auth user has been cleaned up",
         }),
         {

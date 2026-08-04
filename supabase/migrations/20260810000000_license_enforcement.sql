@@ -138,4 +138,113 @@ VALUES (
 )
 ON CONFLICT (code) DO NOTHING;
 
+-- ---------------------------------------------------------------------------
+-- 6. Atomic Tenant Provisioning Procedure
+-- ---------------------------------------------------------------------------
+-- Called by onboard-tenant Edge Function to execute all database insertions
+-- within a single atomic transaction.
+
+CREATE OR REPLACE FUNCTION public.provision_tenant_atomic(
+  p_user_id uuid,
+  p_user_email text,
+  p_user_name text,
+  p_legal_name text,
+  p_trade_name text,
+  p_country_code text,
+  p_license_days int,
+  p_branch_name text,
+  p_branch_code text,
+  p_stock_code text,
+  p_stock_name text,
+  p_stock_kind text,
+  p_member_type text,
+  p_role_name text,
+  p_terminal_code text,
+  p_device_type text,
+  p_printer_name text,
+  p_printer_type text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, ims
+AS $$
+DECLARE
+  v_org_id uuid := gen_random_uuid();
+  v_branch_id uuid := gen_random_uuid();
+  v_stock_loc_id uuid := gen_random_uuid();
+  v_terminal_id uuid := gen_random_uuid();
+  v_printer_id uuid := gen_random_uuid();
+  v_role_id uuid;
+  v_plan_id uuid;
+  v_result jsonb;
+BEGIN
+  -- 1. Lookup app role
+  SELECT id INTO v_role_id FROM public.app_roles WHERE name = p_role_name LIMIT 1;
+  IF v_role_id IS NULL THEN
+    RAISE EXCEPTION 'App role "%" not found in public.app_roles', p_role_name;
+  END IF;
+
+  -- 2. Lookup default plan
+  SELECT id INTO v_plan_id FROM public.plans WHERE code = 'enterprise_annual' AND is_active = true LIMIT 1;
+
+  -- 3. Create application user profile
+  INSERT INTO public.users (id, email, name, is_active)
+  VALUES (p_user_id, p_user_email, p_user_name, true)
+  ON CONFLICT (id) DO UPDATE SET is_active = true, name = EXCLUDED.name;
+
+  -- 4. Create organization with license
+  INSERT INTO public.organizations (
+    id, legal_name, trade_name, country_code, status,
+    license_status, license_starts_at, license_expires_at, license_grace_ends_at
+  ) VALUES (
+    v_org_id, p_legal_name, COALESCE(p_trade_name, p_legal_name), p_country_code, 'active',
+    'active', now(), now() + (p_license_days || ' days')::interval, now() + (p_license_days || ' days')::interval + interval '30 days'
+  );
+
+  -- 5. Create subscription if plan exists
+  IF v_plan_id IS NOT NULL THEN
+    INSERT INTO public.subscriptions (organization_id, plan_id, status, current_period_end)
+    VALUES (v_org_id, v_plan_id, 'active', now() + (p_license_days || ' days')::interval);
+  END IF;
+
+  -- 6. Create branch
+  INSERT INTO public.branches (id, organization_id, name, branch_code, status)
+  VALUES (v_branch_id, v_org_id, p_branch_name, p_branch_code, 'active');
+
+  -- 7. Create stock location
+  INSERT INTO ims.stock_locations (id, organization_id, branch_id, code, name, kind, is_active)
+  VALUES (v_stock_loc_id, v_org_id, v_branch_id, p_stock_code, p_stock_name, p_stock_kind, true);
+
+  -- 8. Create organization membership
+  INSERT INTO public.organization_memberships (organization_id, user_id, member_type, role_id, status)
+  VALUES (v_org_id, p_user_id, p_member_type, v_role_id, 'active');
+
+  -- 9. Create staff branch access (for staff members)
+  IF p_member_type = 'staff' THEN
+    INSERT INTO public.staff_branch_access (organization_id, user_id, branch_id, status)
+    VALUES (v_org_id, p_user_id, v_branch_id, 'active');
+  END IF;
+
+  -- 10. Create POS terminal
+  INSERT INTO public.terminals (id, organization_id, branch_id, terminal_code, device_type, status)
+  VALUES (v_terminal_id, v_org_id, v_branch_id, p_terminal_code, p_device_type, 'active');
+
+  -- 11. Create receipt printer
+  INSERT INTO public.printers (id, organization_id, branch_id, name, type, status, is_default)
+  VALUES (v_printer_id, v_org_id, v_branch_id, p_printer_name, p_printer_type, 'connected', true);
+
+  -- Build return JSON
+  v_result := jsonb_build_object(
+    'org_id', v_org_id,
+    'branch_id', v_branch_id,
+    'stock_loc_id', v_stock_loc_id,
+    'terminal_id', v_terminal_id,
+    'printer_id', v_printer_id
+  );
+
+  RETURN v_result;
+END;
+$$;
+
 COMMIT;
