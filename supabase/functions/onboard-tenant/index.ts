@@ -165,6 +165,24 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
+    // Format phone to E.164 standard if provided (e.g., 0568612759 -> +971568612759)
+    let formattedPhone: string | undefined = undefined;
+    if (body.user_phone && body.user_phone.trim()) {
+      const cleanPhone = body.user_phone.trim().replace(/[\s\-\(\)]/g, "");
+      if (cleanPhone.startsWith("+")) {
+        formattedPhone = cleanPhone;
+      } else if (cleanPhone.startsWith("00")) {
+        formattedPhone = "+" + cleanPhone.slice(2);
+      } else if (cleanPhone.startsWith("0")) {
+        // Assume default country AE (+971) if local leading 0
+        formattedPhone = "+971" + cleanPhone.slice(1);
+      } else if (/^\d{8,12}$/.test(cleanPhone)) {
+        formattedPhone = "+971" + cleanPhone;
+      } else {
+        formattedPhone = "+" + cleanPhone;
+      }
+    }
+
     // -----------------------------------------------------------------------
     // 4. Create Auth User via Admin API
     // -----------------------------------------------------------------------
@@ -172,10 +190,10 @@ Deno.serve(async (req) => {
       await adminClient.auth.admin.createUser({
         email: body.user_email,
         password: body.user_password,
-        phone: body.user_phone || undefined,
+        phone: formattedPhone,
         email_confirm: true,
-        phone_confirm: body.user_phone ? true : false,
-        user_metadata: { name: body.user_name },
+        phone_confirm: formattedPhone ? true : false,
+        user_metadata: { name: body.user_name, phone: body.user_phone },
       });
 
     if (authError || !authData.user) {
