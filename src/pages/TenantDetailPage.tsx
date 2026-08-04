@@ -30,12 +30,41 @@ interface MemberRow {
   app_roles: { name: string; level: number } | null;
 }
 
+interface Terminal {
+  id: string;
+  terminal_code: string;
+  device_type: string;
+  status: string;
+  branches: { name: string } | null;
+}
+
+interface Printer {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  is_default: boolean;
+  branches: { name: string } | null;
+}
+
+interface StockLocation {
+  id: string;
+  code: string;
+  name: string;
+  kind: string;
+  is_active: boolean;
+  branches: { name: string } | null;
+}
+
 export default function TenantDetailPage() {
   const { orgId } = useParams<{ orgId: string }>();
   const navigate = useNavigate();
   const [org, setOrg] = useState<Organization | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
+  const [terminals, setTerminals] = useState<Terminal[]>([]);
+  const [printers, setPrinters] = useState<Printer[]>([]);
+  const [stockLocations, setStockLocations] = useState<StockLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,17 +74,23 @@ export default function TenantDetailPage() {
   async function fetchAll() {
     setLoading(true);
 
-    const [orgRes, branchRes, memberRes] = await Promise.all([
+    const [orgRes, branchRes, memberRes, termRes, printRes, stockRes] = await Promise.all([
       supabase.from('organizations').select('*').eq('id', orgId!).single(),
       supabase.from('branches').select('id, name, branch_code, status').eq('organization_id', orgId!),
       supabase.from('organization_memberships')
         .select('user_id, member_type, status, users!user_id(email, name), app_roles:role_id(name, level)')
         .eq('organization_id', orgId!),
+      supabase.from('terminals').select('id, terminal_code, device_type, status, branches(name)').eq('organization_id', orgId!),
+      supabase.from('printers').select('id, name, type, status, is_default, branches(name)').eq('organization_id', orgId!),
+      supabase.schema('ims').from('stock_locations').select('id, code, name, kind, is_active, branches(name)').eq('organization_id', orgId!),
     ]);
 
     if (orgRes.data) setOrg(orgRes.data as Organization);
     if (branchRes.data) setBranches(branchRes.data as Branch[]);
     if (memberRes.data) setMembers(memberRes.data as unknown as MemberRow[]);
+    if (termRes.data) setTerminals(termRes.data as unknown as Terminal[]);
+    if (printRes.data) setPrinters(printRes.data as unknown as Printer[]);
+    if (stockRes.data) setStockLocations(stockRes.data as unknown as StockLocation[]);
     setLoading(false);
   }
 
@@ -103,8 +138,9 @@ export default function TenantDetailPage() {
           </span>
         </div>
 
-        {/* License Info Card */}
+        {/* Overview Grid */}
         <div className="detail-grid">
+          {/* License Info Card */}
           <div className="glass-card detail-card">
             <h3 className="detail-card-title">License Information</h3>
             <div className="detail-rows">
@@ -126,7 +162,7 @@ export default function TenantDetailPage() {
                   <div key={b.id} className="detail-list-item">
                     <div>
                       <div className="detail-list-name">{b.name}</div>
-                      <div className="detail-list-meta">{b.branch_code}</div>
+                      <div className="detail-list-meta">Code: {b.branch_code}</div>
                     </div>
                     <span className={`pill pill-${b.status === 'active' ? 'active' : 'suspended'}`}>
                       {b.status}
@@ -134,6 +170,85 @@ export default function TenantDetailPage() {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* POS Terminals */}
+          <div className="glass-card detail-card">
+            <h3 className="detail-card-title">POS Terminals ({terminals.length})</h3>
+            {terminals.length === 0 ? (
+              <p className="detail-empty">No POS terminals provisioned.</p>
+            ) : (
+              <div className="detail-list">
+                {terminals.map((t) => (
+                  <div key={t.id} className="detail-list-item">
+                    <div>
+                      <div className="detail-list-name">🖥️ {t.terminal_code}</div>
+                      <div className="detail-list-meta">{t.device_type} • {t.branches?.name || 'Main Branch'}</div>
+                    </div>
+                    <span className={`pill pill-${t.status === 'active' ? 'active' : 'suspended'}`}>
+                      {t.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Printers */}
+          <div className="glass-card detail-card">
+            <h3 className="detail-card-title">Printers ({printers.length})</h3>
+            {printers.length === 0 ? (
+              <p className="detail-empty">No printers provisioned.</p>
+            ) : (
+              <div className="detail-list">
+                {printers.map((p) => (
+                  <div key={p.id} className="detail-list-item">
+                    <div>
+                      <div className="detail-list-name">🖨️ {p.name} {p.is_default ? '⭐' : ''}</div>
+                      <div className="detail-list-meta">{p.type} • {p.branches?.name || 'Main Branch'}</div>
+                    </div>
+                    <span className={`pill pill-${p.status === 'connected' || p.status === 'active' ? 'active' : 'suspended'}`}>
+                      {p.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Inventory Stock Locations */}
+          <div className="glass-card detail-card" style={{ gridColumn: '1 / -1' }}>
+            <h3 className="detail-card-title">Stock & Warehouse Locations ({stockLocations.length})</h3>
+            {stockLocations.length === 0 ? (
+              <p className="detail-empty">No stock locations provisioned.</p>
+            ) : (
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Location Code</th>
+                    <th>Name</th>
+                    <th>Kind</th>
+                    <th>Branch</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stockLocations.map((loc) => (
+                    <tr key={loc.id}>
+                      <td style={{ fontWeight: 600, fontFamily: 'monospace' }}>📦 {loc.code}</td>
+                      <td>{loc.name}</td>
+                      <td style={{ textTransform: 'capitalize' }}>{loc.kind}</td>
+                      <td>{loc.branches?.name || '—'}</td>
+                      <td>
+                        <span className={`pill pill-${loc.is_active ? 'active' : 'suspended'}`}>
+                          {loc.is_active ? 'active' : 'inactive'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
 
@@ -158,7 +273,7 @@ export default function TenantDetailPage() {
                     <tr key={m.user_id}>
                       <td style={{ fontWeight: 600 }}>{m.users?.name || '—'}</td>
                       <td>{m.users?.email || '—'}</td>
-                      <td>{m.member_type}</td>
+                      <td style={{ textTransform: 'capitalize' }}>{m.member_type}</td>
                       <td>{m.app_roles?.name || '—'} {m.app_roles?.level ? `(Lv.${m.app_roles.level})` : ''}</td>
                       <td>
                         <span className={`pill pill-${m.status === 'active' ? 'active' : 'expired'}`}>
