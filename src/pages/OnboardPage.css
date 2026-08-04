@@ -1,0 +1,213 @@
+.onboard-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-8);
+}
+
+.onboard-container {
+  width: 720px;
+  max-width: 100%;
+  padding: var(--space-8);
+}
+
+.onboard-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.onboard-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+/* --- Step Labels --- */
+.step-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.step-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast);
+}
+
+.step-label.active {
+  color: var(--color-accent-light);
+  font-weight: 600;
+}
+
+/* --- Step Content --- */
+.step-content {
+  animation: fadeIn var(--transition-base) ease-out;
+}
+
+.step-heading {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* --- Form Grid --- */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Review Grid --- */
+.review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+.review-section {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.review-section h4 {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+  color: var(--color-accent-light);
+}
+
+.review-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  padding: var(--space-1) 0;
+  gap: var(--space-2);
+}
+
+.review-row span {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.review-row strong {
+  color: var(--color-text-primary);
+  text-align: right;
+  word-break: break-word;
+}
+
+@media (max-width: 600px) {
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Wizard Nav --- */
+.wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.wizard-error {
+  text-align: center;
+  padding: var(--space-3);
+  margin-top: var(--space-4);
+  background: var(--color-danger-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* --- Success View --- */
+.success-view {
+  text-align: center;
+  padding: var(--space-4);
+}
+
+.success-icon {
+  font-size: 64px;
+  line-height: 1;
+  margin-bottom: var(--space-4);
+  animation: bounceIn 0.6s ease-out;
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.success-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  background: var(--gradient-success);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-2);
+}
+
+.success-subtitle {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-6);
+}
+
+/* --- Credentials Card --- */
+.credentials-card {
+  text-align: left;
+  padding: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.credentials-card h4 {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+  color: var(--color-accent-light);
+}
+
+.credential-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.credential-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.credential-value {
+  font-size: var(--font-size-sm);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--color-success);
+  background: rgba(16, 185, 129, 0.1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.success-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+}
