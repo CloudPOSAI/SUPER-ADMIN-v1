@@ -73,6 +73,22 @@ CREATE POLICY "Super admins can update all organizations" ON public.organization
   FOR UPDATE TO authenticated
   USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
 
+-- Branches, Memberships, & Users RLS: Allow super admins to view all tenant records
+DROP POLICY IF EXISTS "Super admins can select all branches" ON public.branches;
+CREATE POLICY "Super admins can select all branches" ON public.branches
+  FOR SELECT TO authenticated
+  USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can select all organization memberships" ON public.organization_memberships;
+CREATE POLICY "Super admins can select all organization memberships" ON public.organization_memberships
+  FOR SELECT TO authenticated
+  USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can select all user profiles" ON public.users;
+CREATE POLICY "Super admins can select all user profiles" ON public.users
+  FOR SELECT TO authenticated
+  USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
 -- ---------------------------------------------------------------------------
 -- 3. License Enforcement Helper Function
 -- ---------------------------------------------------------------------------
