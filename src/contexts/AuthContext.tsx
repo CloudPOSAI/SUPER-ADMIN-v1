@@ -7,7 +7,9 @@ interface AuthContextType {
   session: Session | null;
   isSuperAdmin: boolean;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInPassword: (email: string, password: string) => Promise<{ error: string | null }>;
+  sendEmailOtp: (email: string) => Promise<{ error: string | null }>;
+  verifyEmailOtp: (email: string, token: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -41,8 +43,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signInPassword = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    return { error: null };
+  }, []);
+
+  const sendEmailOtp = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({ email });
+    if (error) return { error: error.message };
+    return { error: null };
+  }, []);
+
+  const verifyEmailOtp = useCallback(async (email: string, token: string) => {
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
     if (error) return { error: error.message };
     return { error: null };
   }, []);
@@ -54,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, isSuperAdmin, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, isSuperAdmin, loading, signInPassword, sendEmailOtp, verifyEmailOtp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
