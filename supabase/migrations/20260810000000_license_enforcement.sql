@@ -62,6 +62,17 @@ CREATE POLICY super_admin_delete_policy ON public.super_admins
   FOR DELETE TO authenticated
   USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
 
+-- Organizations RLS: Allow super admins to view and manage all tenant organizations
+DROP POLICY IF EXISTS "Super admins can select all organizations" ON public.organizations;
+CREATE POLICY "Super admins can select all organizations" ON public.organizations
+  FOR SELECT TO authenticated
+  USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can update all organizations" ON public.organizations;
+CREATE POLICY "Super admins can update all organizations" ON public.organizations
+  FOR UPDATE TO authenticated
+  USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
 -- ---------------------------------------------------------------------------
 -- 3. License Enforcement Helper Function
 -- ---------------------------------------------------------------------------
