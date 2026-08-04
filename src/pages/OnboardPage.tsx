@@ -62,7 +62,6 @@ const STEPS = [
 
 export default function OnboardPage() {
   const navigate = useNavigate();
-  const { session } = useAuth();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>(INITIAL_DATA);
   const [submitting, setSubmitting] = useState(false);
