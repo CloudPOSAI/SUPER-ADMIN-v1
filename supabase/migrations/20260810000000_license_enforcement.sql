@@ -20,8 +20,7 @@ ALTER TABLE public.organizations
     CHECK (license_status IN ('active', 'expired', 'suspended', 'grace_period')),
   ADD COLUMN IF NOT EXISTS license_starts_at timestamptz NOT NULL DEFAULT now(),
   ADD COLUMN IF NOT EXISTS license_expires_at timestamptz NOT NULL DEFAULT (now() + interval '1 year'),
-  ADD COLUMN IF NOT EXISTS license_grace_ends_at timestamptz
-    GENERATED ALWAYS AS (license_expires_at + interval '30 days') STORED;
+  ADD COLUMN IF NOT EXISTS license_grace_ends_at timestamptz DEFAULT (now() + interval '1 year' + interval '30 days');
 
 -- Composite index for the cron job and license enforcement queries
 CREATE INDEX IF NOT EXISTS idx_organizations_license_expiry
@@ -32,6 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_organizations_license_expiry
 UPDATE public.organizations
 SET license_starts_at = now(),
     license_expires_at = now() + interval '1 year',
+    license_grace_ends_at = now() + interval '1 year' + interval '30 days',
     license_status = 'active'
 WHERE license_status = 'active';
 
@@ -107,21 +107,19 @@ COMMENT ON FUNCTION public.is_org_licensed_for_writes(uuid) IS
 --   active -> grace_period (when license_expires_at < now())
 --   grace_period -> expired (when 30-day grace window has passed)
 
-SELECT cron.schedule(
-  'expire-licenses',
-  '0 0 * * *',
-  $$
-    UPDATE public.organizations
-    SET license_status = CASE
-      WHEN license_expires_at < now() - interval '30 days' THEN 'expired'
-      WHEN license_expires_at < now() THEN 'grace_period'
-      ELSE license_status
-    END,
-    updated_at = now()
-    WHERE license_status IN ('active', 'grace_period')
-      AND license_expires_at < now();
-  $$
-);
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+DO $$
+BEGIN
+  PERFORM cron.schedule(
+    'expire-licenses',
+    '0 0 * * *',
+    'UPDATE public.organizations SET license_status = CASE WHEN license_expires_at < now() - interval ''30 days'' THEN ''expired'' WHEN license_expires_at < now() THEN ''grace_period'' ELSE license_status END, updated_at = now() WHERE license_status IN (''active'', ''grace_period'') AND license_expires_at < now();'
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE NOTICE 'pg_cron scheduling could not be initialized (error: %); skipping automated cron creation.', SQLERRM;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 5. Seed Default License Plan
