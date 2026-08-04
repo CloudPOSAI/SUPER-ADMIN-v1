@@ -56,6 +56,18 @@ interface StockLocation {
   branch_id: string | null;
 }
 
+const COUNTRY_NAMES: Record<string, { name: string; flag: string }> = {
+  AE: { name: 'United Arab Emirates', flag: '🇦🇪' },
+  SA: { name: 'Saudi Arabia', flag: '🇸🇦' },
+  OM: { name: 'Oman', flag: '🇴🇲' },
+  BH: { name: 'Bahrain', flag: '🇧🇭' },
+  KW: { name: 'Kuwait', flag: '🇰🇼' },
+  QA: { name: 'Qatar', flag: '🇶🇦' },
+  IN: { name: 'India', flag: '🇮🇳' },
+  US: { name: 'United States', flag: '🇺🇸' },
+  GB: { name: 'United Kingdom', flag: '🇬🇧' },
+};
+
 export default function TenantDetailPage() {
   const { orgId } = useParams<{ orgId: string }>();
   const navigate = useNavigate();
@@ -118,24 +130,49 @@ export default function TenantDetailPage() {
     : org.license_status === 'expired' ? 'expired'
     : 'suspended';
 
+  const countryInfo = COUNTRY_NAMES[org.country_code.toUpperCase()] || { name: org.country_code, flag: '🌐' };
+
   return (
     <div className="tenant-detail-page">
       <div className="page-container">
-        <div className="page-header">
-          <div>
-            <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')} style={{ marginBottom: 'var(--space-2)' }}>
-              ← Back to Dashboard
-            </button>
-            <h1 className="page-title">{org.legal_name}</h1>
-            <p className="page-subtitle">
-              {org.trade_name && org.trade_name !== org.legal_name ? `${org.trade_name} • ` : ''}
-              {org.country_code} • Onboarded {new Date(org.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-            </p>
+        {/* Top Tenant Identity Card */}
+        <div className="glass-card tenant-header-card">
+          <div className="tenant-header-top">
+            <div>
+              <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')} style={{ marginBottom: 'var(--space-3)' }}>
+                ← Back to Dashboard
+              </button>
+              <div className="tenant-title-row">
+                <h1 className="tenant-title">{org.legal_name}</h1>
+                <span className={`pill pill-${statusClass}`}>
+                  <span className="pill-dot" />
+                  {org.license_status === 'grace_period' ? 'Grace Period' : org.license_status}
+                </span>
+              </div>
+              {org.trade_name && org.trade_name !== org.legal_name && (
+                <div className="tenant-trade-name">Trading as <strong>{org.trade_name}</strong></div>
+              )}
+            </div>
           </div>
-          <span className={`pill pill-${statusClass}`}>
-            <span className="pill-dot" />
-            {org.license_status === 'grace_period' ? 'Grace Period' : org.license_status}
-          </span>
+
+          <div className="tenant-meta-chips">
+            <div className="meta-chip">
+              <span className="chip-label">Country</span>
+              <span className="chip-value">{countryInfo.flag} {countryInfo.name} ({org.country_code})</span>
+            </div>
+            <div className="meta-chip">
+              <span className="chip-label">Onboarded Date</span>
+              <span className="chip-value">📅 {new Date(org.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            </div>
+            <div className="meta-chip">
+              <span className="chip-label">License Timeline</span>
+              <span className="chip-value">⏱️ {new Date(org.license_starts_at).toLocaleDateString()} — {new Date(org.license_expires_at).toLocaleDateString()}</span>
+            </div>
+            <div className="meta-chip">
+              <span className="chip-label">Organization ID</span>
+              <code className="chip-value code-id">{org.id}</code>
+            </div>
+          </div>
         </div>
 
         {/* Overview Grid */}

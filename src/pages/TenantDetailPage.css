@@ -2,6 +2,77 @@
   min-height: 100vh;
 }
 
+.tenant-header-card {
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.tenant-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.tenant-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.tenant-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.tenant-trade-name {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+}
+
+.tenant-trade-name strong {
+  color: var(--color-brand-light);
+}
+
+.tenant-meta-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.meta-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chip-label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.chip-value {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.code-id {
+  font-family: monospace;
+  font-size: var(--font-size-xs);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
