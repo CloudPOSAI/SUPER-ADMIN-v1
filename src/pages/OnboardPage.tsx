@@ -217,17 +217,17 @@ export default function OnboardPage() {
                   <input id="trade_name" className="form-input" value={data.trade_name} onChange={(e) => updateField('trade_name', e.target.value)} placeholder="Downtown Cafe" />
                 </div>
                 <div className="form-group">
-                  <label className="form-label" htmlFor="country_code">Country Code</label>
+                  <label className="form-label" htmlFor="country_code">Country</label>
                   <select id="country_code" className="form-select" value={data.country_code} onChange={(e) => updateField('country_code', e.target.value)}>
-                    <option value="AE">AE - UAE</option>
-                    <option value="SA">SA - Saudi Arabia</option>
-                    <option value="QA">QA - Qatar</option>
-                    <option value="BH">BH - Bahrain</option>
-                    <option value="KW">KW - Kuwait</option>
-                    <option value="OM">OM - Oman</option>
-                    <option value="IN">IN - India</option>
-                    <option value="US">US - United States</option>
-                    <option value="GB">GB - United Kingdom</option>
+                    <option value="AE">🇦🇪 UAE (+971)</option>
+                    <option value="SA">🇸🇦 Saudi Arabia (+966)</option>
+                    <option value="OM">🇴🇲 Oman (+968)</option>
+                    <option value="BH">🇧🇭 Bahrain (+973)</option>
+                    <option value="KW">🇰🇼 Kuwait (+965)</option>
+                    <option value="QA">🇶🇦 Qatar (+974)</option>
+                    <option value="IN">🇮🇳 India (+91)</option>
+                    <option value="US">🇺🇸 United States (+1)</option>
+                    <option value="GB">🇬🇧 United Kingdom (+44)</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -285,7 +285,7 @@ export default function OnboardPage() {
                 </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="user_phone">Phone Number</label>
-                  <input id="user_phone" className="form-input" type="tel" value={data.user_phone} onChange={(e) => updateField('user_phone', e.target.value)} placeholder="0501234567" />
+                  <input id="user_phone" className="form-input" type="tel" value={data.user_phone} onChange={(e) => updateField('user_phone', e.target.value)} placeholder="0501234567 or +971501234567" />
                 </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="user_password">Temporary Password <span className="required">*</span></label>

@@ -165,7 +165,20 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Format phone to E.164 standard if provided (e.g., 0568612759 -> +971568612759)
+    const COUNTRY_DIAL_CODES: Record<string, string> = {
+      AE: "+971",
+      SA: "+966",
+      OM: "+968",
+      BH: "+973",
+      KW: "+965",
+      QA: "+974",
+      IN: "+91",
+      US: "+1",
+      GB: "+44",
+    };
+    const defaultPrefix = COUNTRY_DIAL_CODES[(countryCode || "AE").toUpperCase()] || "+971";
+
+    // Format phone to E.164 standard based on selected country
     let formattedPhone: string | undefined = undefined;
     if (body.user_phone && body.user_phone.trim()) {
       const cleanPhone = body.user_phone.trim().replace(/[\s\-\(\)]/g, "");
@@ -174,10 +187,9 @@ Deno.serve(async (req) => {
       } else if (cleanPhone.startsWith("00")) {
         formattedPhone = "+" + cleanPhone.slice(2);
       } else if (cleanPhone.startsWith("0")) {
-        // Assume default country AE (+971) if local leading 0
-        formattedPhone = "+971" + cleanPhone.slice(1);
-      } else if (/^\d{8,12}$/.test(cleanPhone)) {
-        formattedPhone = "+971" + cleanPhone;
+        formattedPhone = defaultPrefix + cleanPhone.slice(1);
+      } else if (/^\d{7,12}$/.test(cleanPhone)) {
+        formattedPhone = defaultPrefix + cleanPhone;
       } else {
         formattedPhone = "+" + cleanPhone;
       }
