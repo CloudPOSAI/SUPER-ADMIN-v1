@@ -49,7 +49,7 @@ export default function TenantDetailPage() {
       supabase.from('organizations').select('*').eq('id', orgId!).single(),
       supabase.from('branches').select('id, name, branch_code, status').eq('organization_id', orgId!),
       supabase.from('organization_memberships')
-        .select('user_id, member_type, status, users(email, name), app_roles:role_id(name, level)')
+        .select('user_id, member_type, status, users!user_id(email, name), app_roles:role_id(name, level)')
         .eq('organization_id', orgId!),
     ]);
 
