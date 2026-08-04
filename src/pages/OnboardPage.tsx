@@ -87,19 +87,23 @@ export default function OnboardPage() {
     setError('');
 
     try {
-      // Call the onboard-tenant Edge Function
+      // Call the onboard-tenant Edge Function (Supabase SDK automatically attaches session JWT)
       const { data: fnResult, error: fnError } = await supabase.functions.invoke(
         'onboard-tenant',
-        {
-          body: data,
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-        }
+        { body: data }
       );
 
       if (fnError) {
-        setError(fnError.message || 'Onboarding failed');
+        let errorMsg = fnError.message || 'Onboarding failed';
+        if ('context' in fnError && fnError.context instanceof Response) {
+          try {
+            const body = await fnError.context.json();
+            if (body.error) errorMsg = body.error;
+          } catch {
+            /* use default message */
+          }
+        }
+        setError(errorMsg);
       } else if (fnResult?.error) {
         setError(fnResult.error);
       } else {
