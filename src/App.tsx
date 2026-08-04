@@ -7,7 +7,7 @@ import TenantDetailPage from './pages/TenantDetailPage';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, isSuperAdmin, loading } = useAuth();
+  const { user, isSuperAdmin, isMfaVerified, loading } = useAuth();
 
   if (loading) {
     return (
@@ -18,7 +18,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user || !isMfaVerified) return <Navigate to="/login" replace />;
 
   // Block non-super-admin users
   if (!isSuperAdmin) {
@@ -41,7 +41,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 }
 
 function AppRoutes() {
-  const { user, isSuperAdmin, loading } = useAuth();
+  const { user, isSuperAdmin, isMfaVerified, loading } = useAuth();
 
   if (loading) {
     return (
@@ -55,7 +55,7 @@ function AppRoutes() {
     <Routes>
       <Route
         path="/login"
-        element={user && isSuperAdmin ? <Navigate to="/" replace /> : <LoginPage />}
+        element={user && isSuperAdmin && isMfaVerified ? <Navigate to="/" replace /> : <LoginPage />}
       />
       <Route
         path="/"
