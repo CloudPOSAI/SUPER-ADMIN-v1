@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import './LoginPage.css';
 
 export default function LoginPage() {
@@ -34,9 +35,16 @@ export default function LoginPage() {
       return;
     }
 
-    // 2. Trigger Email OTP 2FA challenge
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setError('Failed to retrieve user session');
+      setLoading(false);
+      return;
+    }
+
+    // 2. Trigger send-otp Edge Function (Resend Service)
     setSendingOtp(true);
-    const otpRes = await sendEmailOtp(email);
+    const otpRes = await sendEmailOtp(user.id, email);
     setSendingOtp(false);
 
     if (otpRes.error) {
@@ -55,10 +63,16 @@ export default function LoginPage() {
       return;
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setError('Failed to retrieve user session');
+      return;
+    }
+
     setError('');
     setLoading(true);
 
-    const result = await verifyEmailOtp(email, otpCode.trim());
+    const result = await verifyEmailOtp(user.id, otpCode.trim());
     if (result.error) {
       setError(result.error || 'Invalid or expired 2FA code');
     }
@@ -67,9 +81,12 @@ export default function LoginPage() {
 
   const handleResendOtp = async () => {
     if (resendTimer > 0) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     setError('');
     setSendingOtp(true);
-    const res = await sendEmailOtp(email);
+    const res = await sendEmailOtp(user.id, email);
     setSendingOtp(false);
     if (res.error) {
       setError(`Failed to resend code: ${res.error}`);

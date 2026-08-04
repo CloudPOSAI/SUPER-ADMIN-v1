@@ -9,8 +9,8 @@ interface AuthContextType {
   isMfaVerified: boolean;
   loading: boolean;
   signInPassword: (email: string, password: string) => Promise<{ error: string | null }>;
-  sendEmailOtp: (email: string) => Promise<{ error: string | null }>;
-  verifyEmailOtp: (email: string, token: string) => Promise<{ error: string | null }>;
+  sendEmailOtp: (userId: string, email: string) => Promise<{ error: string | null }>;
+  verifyEmailOtp: (userId: string, code: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -57,15 +57,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   }, []);
 
-  const sendEmailOtp = useCallback(async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({ email });
+  const sendEmailOtp = useCallback(async (userId: string, email: string) => {
+    const { error } = await supabase.functions.invoke('send-otp', {
+      body: { userId, email },
+    });
     if (error) return { error: error.message };
     return { error: null };
   }, []);
 
-  const verifyEmailOtp = useCallback(async (email: string, token: string) => {
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+  const verifyEmailOtp = useCallback(async (userId: string, code: string) => {
+    const { data, error } = await supabase.functions.invoke('verify-otp', {
+      body: { userId, code },
+    });
     if (error) return { error: error.message };
+    if (data && data.success === false) {
+      return { error: data.error || 'Invalid or expired verification code' };
+    }
+
     setIsMfaVerified(true);
     sessionStorage.setItem('superadmin_mfa_verified', 'true');
     return { error: null };
