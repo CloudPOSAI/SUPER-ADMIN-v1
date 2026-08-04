@@ -53,7 +53,7 @@ interface StockLocation {
   name: string;
   kind: string;
   is_active: boolean;
-  branches: { name: string } | null;
+  branch_id: string | null;
 }
 
 export default function TenantDetailPage() {
@@ -82,7 +82,7 @@ export default function TenantDetailPage() {
         .eq('organization_id', orgId!),
       supabase.from('terminals').select('id, terminal_code, device_type, status, branches(name)').eq('organization_id', orgId!),
       supabase.from('printers').select('id, name, type, status, is_default, branches(name)').eq('organization_id', orgId!),
-      supabase.schema('ims').from('stock_locations').select('id, code, name, kind, is_active, branches(name)').eq('organization_id', orgId!),
+      supabase.schema('ims').from('stock_locations').select('id, code, name, kind, is_active, branch_id').eq('organization_id', orgId!),
     ]);
 
     if (orgRes.data) setOrg(orgRes.data as Organization);
@@ -239,7 +239,7 @@ export default function TenantDetailPage() {
                       <td style={{ fontWeight: 600, fontFamily: 'monospace' }}>📦 {loc.code}</td>
                       <td>{loc.name}</td>
                       <td style={{ textTransform: 'capitalize' }}>{loc.kind}</td>
-                      <td>{loc.branches?.name || '—'}</td>
+                      <td>{branches.find((b) => b.id === loc.branch_id)?.name || '—'}</td>
                       <td>
                         <span className={`pill pill-${loc.is_active ? 'active' : 'suspended'}`}>
                           {loc.is_active ? 'active' : 'inactive'}
