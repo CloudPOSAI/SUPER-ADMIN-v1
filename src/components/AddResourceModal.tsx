@@ -140,6 +140,22 @@ export default function AddResourceModal({
           status: 'active',
         });
         if (memberErr) throw memberErr;
+
+        // Auto-provision staff_branch_access so staff can immediately access branch in POS-v2
+        if (branches.length > 0) {
+          const targetBranchIds = (selectedBranchId && selectedBranchId !== 'all')
+            ? [selectedBranchId]
+            : branches.map(b => b.id);
+
+          const branchAccessRows = targetBranchIds.map(bId => ({
+            organization_id: orgId,
+            user_id: userId,
+            branch_id: bId,
+            status: 'active',
+          }));
+
+          await supabase.from('staff_branch_access').insert(branchAccessRows);
+        }
       }
 
       onSuccess();
@@ -370,6 +386,15 @@ export default function AddResourceModal({
                 >
                   {appRoles.map((r) => (
                     <option key={r.id} value={r.id}>{r.name} (Level {r.level})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Branch Access</label>
+                <select className="form-select" value={selectedBranchId} onChange={(e) => setSelectedBranchId(e.target.value)}>
+                  <option value="all">All Branches (Recommended)</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name} ({b.branch_code})</option>
                   ))}
                 </select>
               </div>
