@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import AddResourceModal, { type ModalMode } from '../components/AddResourceModal';
 import ExtendLicenseModal from '../components/ExtendLicenseModal';
+import ChangePlanModal from '../components/ChangePlanModal';
 import './TenantDetailPage.css';
 
 interface Organization {
@@ -79,9 +80,11 @@ export default function TenantDetailPage() {
   const [terminals, setTerminals] = useState<Terminal[]>([]);
   const [printers, setPrinters] = useState<Printer[]>([]);
   const [stockLocations, setStockLocations] = useState<StockLocation[]>([]);
+  const [currentPlanName, setCurrentPlanName] = useState<string>('Standard License');
   const [loading, setLoading] = useState(true);
   const [modalMode, setModalMode] = useState<ModalMode | null>(null);
   const [showExtendModal, setShowExtendModal] = useState(false);
+  const [showChangePlanModal, setShowChangePlanModal] = useState(false);
 
   useEffect(() => {
     if (orgId) fetchAll();
@@ -90,7 +93,7 @@ export default function TenantDetailPage() {
   async function fetchAll() {
     setLoading(true);
 
-    const [orgRes, branchRes, memberRes, termRes, printRes, stockRes] = await Promise.all([
+    const [orgRes, branchRes, memberRes, termRes, printRes, stockRes, subRes] = await Promise.all([
       supabase.from('organizations').select('*').eq('id', orgId!).single(),
       supabase.from('branches').select('id, name, branch_code, status').eq('organization_id', orgId!),
       supabase.from('organization_memberships')
@@ -99,6 +102,7 @@ export default function TenantDetailPage() {
       supabase.from('terminals').select('id, terminal_code, device_type, status, branches(name)').eq('organization_id', orgId!),
       supabase.from('printers').select('id, name, type, status, is_default, branches(name)').eq('organization_id', orgId!),
       supabase.schema('ims').from('stock_locations').select('id, code, name, kind, is_active, branch_id').eq('organization_id', orgId!),
+      supabase.from('subscriptions').select('plans(name)').eq('organization_id', orgId!).maybeSingle(),
     ]);
 
     if (orgRes.data) setOrg(orgRes.data as Organization);
@@ -107,6 +111,9 @@ export default function TenantDetailPage() {
     if (termRes.data) setTerminals(termRes.data as unknown as Terminal[]);
     if (printRes.data) setPrinters(printRes.data as unknown as Printer[]);
     if (stockRes.data) setStockLocations(stockRes.data as unknown as StockLocation[]);
+    if (subRes.data && (subRes.data as any).plans?.name) {
+      setCurrentPlanName((subRes.data as any).plans.name);
+    }
     setLoading(false);
   }
 
@@ -185,9 +192,13 @@ export default function TenantDetailPage() {
           <div className="glass-card detail-card">
             <div className="card-header-with-action">
               <h3 className="detail-card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>License Information</h3>
-              <button className="btn btn-success btn-xs" onClick={() => setShowExtendModal(true)}>Extend License</button>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <button className="btn btn-ghost btn-xs" onClick={() => setShowChangePlanModal(true)}>Change Plan</button>
+                <button className="btn btn-success btn-xs" onClick={() => setShowExtendModal(true)}>Extend License</button>
+              </div>
             </div>
             <div className="detail-rows" style={{ marginTop: 'var(--space-3)' }}>
+              <div className="detail-row"><span>Plan Tier</span><strong style={{ color: 'var(--color-accent-light)' }}>{currentPlanName}</strong></div>
               <div className="detail-row"><span>Status</span><strong className={`text-${statusClass}`}>{org.license_status}</strong></div>
               <div className="detail-row"><span>Starts</span><strong>{new Date(org.license_starts_at).toLocaleDateString()}</strong></div>
               <div className="detail-row"><span>Expires</span><strong>{new Date(org.license_expires_at).toLocaleDateString()}</strong></div>
@@ -363,6 +374,15 @@ export default function TenantDetailPage() {
         <ExtendLicenseModal
           org={org}
           onClose={() => setShowExtendModal(false)}
+          onSuccess={fetchAll}
+        />
+      )}
+
+      {showChangePlanModal && org && (
+        <ChangePlanModal
+          orgId={org.id}
+          orgName={org.legal_name}
+          onClose={() => setShowChangePlanModal(false)}
           onSuccess={fetchAll}
         />
       )}

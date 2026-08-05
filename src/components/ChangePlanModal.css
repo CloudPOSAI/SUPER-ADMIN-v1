@@ -1,0 +1,43 @@
+.change-plan-modal-card {
+  width: 520px;
+}
+
+.plan-preview-box {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.preview-price {
+  font-size: var(--font-size-base);
+  font-weight: 800;
+  color: var(--color-success);
+}
+
+.preview-features {
+  display: flex;
+  gap: var(--space-4);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+.preview-features strong {
+  color: var(--color-text-primary);
+}
+
+.modal-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+}
