@@ -394,7 +394,7 @@ export default function AddResourceModal({
                 <select className="form-select" value={selectedBranchId} onChange={(e) => setSelectedBranchId(e.target.value)}>
                   <option value="all">All Branches (Recommended)</option>
                   {branches.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name} ({b.branch_code})</option>
+                    <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
                 </select>
               </div>
