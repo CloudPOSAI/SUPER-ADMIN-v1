@@ -33,11 +33,25 @@ function getLicenseProgressPercent(startsAt: string, expiresAt: string): number 
   return Math.max(0, Math.min(100, ((total - elapsed) / total) * 100));
 }
 
+function getEffectiveLicenseStatus(org: Organization): 'active' | 'grace_period' | 'expired' | 'suspended' {
+  if (org.status === 'suspended' || org.license_status === 'suspended') return 'suspended';
+
+  const now = Date.now();
+  const expiry = new Date(org.license_expires_at).getTime();
+  const graceEnd = org.license_grace_ends_at
+    ? new Date(org.license_grace_ends_at).getTime()
+    : expiry + 30 * 24 * 60 * 60 * 1000;
+
+  if (now > graceEnd) return 'expired';
+  if (now > expiry) return 'grace_period';
+  return 'active';
+}
+
 function getLicenseStatusClass(status: string, daysLeft: number): string {
   if (status === 'expired') return 'expired';
   if (status === 'grace_period') return 'grace';
   if (status === 'suspended') return 'suspended';
-  if (daysLeft <= 7) return 'grace';
+  if (daysLeft <= 7 && daysLeft > 0) return 'grace';
   return 'active';
 }
 
@@ -74,14 +88,15 @@ export default function DashboardPage() {
   }
 
   const totalOrgs = orgs.length;
-  const activeOrgs = orgs.filter((o) => o.license_status === 'active').length;
+  const activeOrgs = orgs.filter((o) => getEffectiveLicenseStatus(o) === 'active').length;
   const expiringOrgs = orgs.filter((o) => {
     const days = daysUntilExpiry(o.license_expires_at);
-    return o.license_status === 'active' && days <= 30 && days > 0;
+    return getEffectiveLicenseStatus(o) === 'active' && days <= 30 && days > 0;
   }).length;
-  const expiredOrgs = orgs.filter(
-    (o) => o.license_status === 'expired' || o.license_status === 'grace_period'
-  ).length;
+  const expiredOrgs = orgs.filter((o) => {
+    const st = getEffectiveLicenseStatus(o);
+    return st === 'expired' || st === 'grace_period';
+  }).length;
 
   return (
     <div className="dashboard-page">
@@ -172,13 +187,14 @@ export default function DashboardPage() {
                 </thead>
                 <tbody>
                   {orgs.map((org) => {
+                    const effectiveStatus = getEffectiveLicenseStatus(org);
                     const days = daysUntilExpiry(org.license_expires_at);
-                    const statusClass = getLicenseStatusClass(org.license_status, days);
+                    const statusClass = getLicenseStatusClass(effectiveStatus, days);
                     const progressPct = getLicenseProgressPercent(
                       org.license_starts_at,
                       org.license_expires_at
                     );
-                    const progressClass = days <= 7 ? 'danger' : days <= 30 ? 'warning' : 'good';
+                    const progressClass = days <= 0 || effectiveStatus === 'expired' ? 'danger' : days <= 30 || effectiveStatus === 'grace_period' ? 'warning' : 'good';
 
                     return (
                       <tr key={org.id}>
@@ -194,7 +210,7 @@ export default function DashboardPage() {
                         <td>
                           <span className={`pill pill-${statusClass}`}>
                             <span className="pill-dot" />
-                            {org.license_status === 'grace_period' ? 'Grace Period' : org.license_status}
+                            {effectiveStatus === 'grace_period' ? 'Grace Period' : effectiveStatus}
                           </span>
                         </td>
                         <td>

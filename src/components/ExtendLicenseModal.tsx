@@ -54,15 +54,23 @@ export default function ExtendLicenseModal({
         throw new Error('Please select a valid expiration date.');
       }
 
+      const now = new Date().getTime();
+      const expiry = targetExpiry.getTime();
+      const graceEnd = targetExpiry.getTime() + 30 * 24 * 60 * 60 * 1000;
       const startsAt = resetStartDate ? new Date().toISOString() : org.license_starts_at;
       const expiresAt = targetExpiry.toISOString();
-      const graceEndsAt = new Date(targetExpiry.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const graceEndsAt = new Date(graceEnd).toISOString();
+
+      const calculatedStatus =
+        now > graceEnd ? 'expired'
+        : now > expiry ? 'grace_period'
+        : 'active';
 
       // 1. Update organization license columns
       const { error: orgErr } = await supabase
         .from('organizations')
         .update({
-          license_status: 'active',
+          license_status: calculatedStatus,
           license_starts_at: startsAt,
           license_expires_at: expiresAt,
           license_grace_ends_at: graceEndsAt,
