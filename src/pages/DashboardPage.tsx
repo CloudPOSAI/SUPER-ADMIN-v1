@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import ExtendLicenseModal from '../components/ExtendLicenseModal';
 import './DashboardPage.css';
 
 interface Organization {
@@ -262,28 +263,11 @@ export default function DashboardPage() {
 
       {/* Extend License Modal */}
       {extendModalOrg && (
-        <div className="modal-overlay" onClick={() => !extending && setExtendModalOrg(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ marginBottom: 'var(--space-4)' }}>Extend License</h3>
-            <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-6)', fontSize: 'var(--font-size-sm)' }}>
-              Extend the license for <strong>{extendModalOrg.legal_name}</strong> by 1 year from today?
-            </p>
-            <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
-              <button className="btn btn-ghost" onClick={() => setExtendModalOrg(null)} disabled={extending}>
-                Cancel
-              </button>
-              <button
-                className="btn btn-success"
-                onClick={() => handleExtendLicense(extendModalOrg.id)}
-                disabled={extending}
-                id="confirm-extend-license"
-              >
-                {extending ? <span className="spinner" /> : null}
-                {extending ? 'Extending...' : 'Confirm Extension'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ExtendLicenseModal
+          org={extendModalOrg}
+          onClose={() => setExtendModalOrg(null)}
+          onSuccess={fetchOrgs}
+        />
       )}
     </div>
   );

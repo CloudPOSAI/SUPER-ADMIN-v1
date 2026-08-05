@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import AddResourceModal, { type ModalMode } from '../components/AddResourceModal';
+import ExtendLicenseModal from '../components/ExtendLicenseModal';
 import './TenantDetailPage.css';
 
 interface Organization {
@@ -80,6 +81,7 @@ export default function TenantDetailPage() {
   const [stockLocations, setStockLocations] = useState<StockLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalMode, setModalMode] = useState<ModalMode | null>(null);
+  const [showExtendModal, setShowExtendModal] = useState(false);
 
   useEffect(() => {
     if (orgId) fetchAll();
@@ -181,8 +183,11 @@ export default function TenantDetailPage() {
         <div className="detail-grid">
           {/* License Info Card */}
           <div className="glass-card detail-card">
-            <h3 className="detail-card-title">License Information</h3>
-            <div className="detail-rows">
+            <div className="card-header-with-action">
+              <h3 className="detail-card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>License Information</h3>
+              <button className="btn btn-success btn-xs" onClick={() => setShowExtendModal(true)}>Extend License</button>
+            </div>
+            <div className="detail-rows" style={{ marginTop: 'var(--space-3)' }}>
               <div className="detail-row"><span>Status</span><strong className={`text-${statusClass}`}>{org.license_status}</strong></div>
               <div className="detail-row"><span>Starts</span><strong>{new Date(org.license_starts_at).toLocaleDateString()}</strong></div>
               <div className="detail-row"><span>Expires</span><strong>{new Date(org.license_expires_at).toLocaleDateString()}</strong></div>
@@ -350,6 +355,14 @@ export default function TenantDetailPage() {
           orgName={org.legal_name}
           branches={branches}
           onClose={() => setModalMode(null)}
+          onSuccess={fetchAll}
+        />
+      )}
+
+      {showExtendModal && org && (
+        <ExtendLicenseModal
+          org={org}
+          onClose={() => setShowExtendModal(false)}
           onSuccess={fetchAll}
         />
       )}
