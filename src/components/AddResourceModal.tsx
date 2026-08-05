@@ -56,6 +56,10 @@ export default function AddResourceModal({
   const [memberEmail, setMemberEmail] = useState('');
   const [memberType, setMemberType] = useState('staff');
   const [selectedRoleId, setSelectedRoleId] = useState('');
+  const [highPrivilegeConfirmed, setHighPrivilegeConfirmed] = useState(false);
+
+  const selectedRole = appRoles.find((r) => r.id === selectedRoleId);
+  const isHighPrivilegeRole = Boolean(selectedRole && selectedRole.level >= 100);
 
   useEffect(() => {
     if (mode === 'member') {
@@ -355,12 +359,41 @@ export default function AddResourceModal({
               </div>
               <div className="form-group">
                 <label className="form-label">App Role</label>
-                <select className="form-select" value={selectedRoleId} onChange={(e) => setSelectedRoleId(e.target.value)} required>
+                <select
+                  className="form-select"
+                  value={selectedRoleId}
+                  onChange={(e) => {
+                    setSelectedRoleId(e.target.value);
+                    setHighPrivilegeConfirmed(false);
+                  }}
+                  required
+                >
                   {appRoles.map((r) => (
                     <option key={r.id} value={r.id}>{r.name} (Level {r.level})</option>
                   ))}
                 </select>
               </div>
+
+              {isHighPrivilegeRole && (
+                <div className="privilege-warning-card">
+                  <div className="privilege-warning-title">
+                    ⚠️ High Privilege Role Warning ({selectedRole?.name})
+                  </div>
+                  <p className="privilege-warning-text">
+                    Assigning <strong>{selectedRole?.name}</strong> grants complete administrative control over this tenant's settings, staff PINs, and financial data.
+                  </p>
+                  <div className="form-group-checkbox" style={{ marginTop: 'var(--space-3)' }}>
+                    <label className="checkbox-label" style={{ color: '#f59e0b', fontWeight: 600 }}>
+                      <input
+                        type="checkbox"
+                        checked={highPrivilegeConfirmed}
+                        onChange={(e) => setHighPrivilegeConfirmed(e.target.checked)}
+                      />
+                      I confirm granting full administrative ({selectedRole?.name}) access.
+                    </label>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -368,7 +401,11 @@ export default function AddResourceModal({
             <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading || (mode === 'member' && isHighPrivilegeRole && !highPrivilegeConfirmed)}
+            >
               {loading ? <span className="spinner" /> : null}
               {loading ? 'Creating...' : `Save ${titles[mode].replace('Add ', '').replace('Provision ', '')}`}
             </button>
