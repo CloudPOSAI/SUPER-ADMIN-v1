@@ -76,21 +76,99 @@ CREATE POLICY "Super admins can update all organizations" ON public.organization
   FOR UPDATE TO authenticated
   USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
 
--- Branches, Memberships, & Users RLS: Allow super admins to view all tenant records
+-- Branches, Memberships, Users, Terminals, Printers, Stock Locations & Staff Branch Access RLS
+-- Allow Super Admins full SELECT, INSERT, UPDATE, DELETE control over all tenant resources
+
+-- 1. Branches RLS
 DROP POLICY IF EXISTS "Super admins can select all branches" ON public.branches;
 CREATE POLICY "Super admins can select all branches" ON public.branches
-  FOR SELECT TO authenticated
-  USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+  FOR SELECT TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
 
+DROP POLICY IF EXISTS "Super admins can insert branches" ON public.branches;
+CREATE POLICY "Super admins can insert branches" ON public.branches
+  FOR INSERT TO authenticated WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can update branches" ON public.branches;
+CREATE POLICY "Super admins can update branches" ON public.branches
+  FOR UPDATE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+-- 2. Organization Memberships RLS
 DROP POLICY IF EXISTS "Super admins can select all organization memberships" ON public.organization_memberships;
 CREATE POLICY "Super admins can select all organization memberships" ON public.organization_memberships
-  FOR SELECT TO authenticated
-  USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+  FOR SELECT TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
 
+DROP POLICY IF EXISTS "Super admins can insert organization memberships" ON public.organization_memberships;
+CREATE POLICY "Super admins can insert organization memberships" ON public.organization_memberships
+  FOR INSERT TO authenticated WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can update organization memberships" ON public.organization_memberships;
+CREATE POLICY "Super admins can update organization memberships" ON public.organization_memberships
+  FOR UPDATE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+-- 3. Users RLS
 DROP POLICY IF EXISTS "Super admins can select all user profiles" ON public.users;
 CREATE POLICY "Super admins can select all user profiles" ON public.users
-  FOR SELECT TO authenticated
-  USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+  FOR SELECT TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can insert user profiles" ON public.users;
+CREATE POLICY "Super admins can insert user profiles" ON public.users
+  FOR INSERT TO authenticated WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can update user profiles" ON public.users;
+CREATE POLICY "Super admins can update user profiles" ON public.users
+  FOR UPDATE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+-- 4. POS Terminals RLS
+DROP POLICY IF EXISTS "Super admins can select all terminals" ON public.terminals;
+CREATE POLICY "Super admins can select all terminals" ON public.terminals
+  FOR SELECT TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can insert terminals" ON public.terminals;
+CREATE POLICY "Super admins can insert terminals" ON public.terminals
+  FOR INSERT TO authenticated WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can update terminals" ON public.terminals;
+CREATE POLICY "Super admins can update terminals" ON public.terminals
+  FOR UPDATE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+-- 5. Printers RLS
+DROP POLICY IF EXISTS "Super admins can select all printers" ON public.printers;
+CREATE POLICY "Super admins can select all printers" ON public.printers
+  FOR SELECT TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can insert printers" ON public.printers;
+CREATE POLICY "Super admins can insert printers" ON public.printers
+  FOR INSERT TO authenticated WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can update printers" ON public.printers;
+CREATE POLICY "Super admins can update printers" ON public.printers
+  FOR UPDATE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+-- 6. Stock Locations RLS (ims schema)
+DROP POLICY IF EXISTS "Super admins can select all stock locations" ON ims.stock_locations;
+CREATE POLICY "Super admins can select all stock locations" ON ims.stock_locations
+  FOR SELECT TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can insert stock locations" ON ims.stock_locations;
+CREATE POLICY "Super admins can insert stock locations" ON ims.stock_locations
+  FOR INSERT TO authenticated WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can update stock locations" ON ims.stock_locations;
+CREATE POLICY "Super admins can update stock locations" ON ims.stock_locations
+  FOR UPDATE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+-- 7. Staff Branch Access RLS
+DROP POLICY IF EXISTS "Super admins can select all staff branch access" ON public.staff_branch_access;
+CREATE POLICY "Super admins can select all staff branch access" ON public.staff_branch_access
+  FOR SELECT TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can insert staff branch access" ON public.staff_branch_access;
+CREATE POLICY "Super admins can insert staff branch access" ON public.staff_branch_access
+  FOR INSERT TO authenticated WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "Super admins can update staff branch access" ON public.staff_branch_access;
+CREATE POLICY "Super admins can update staff branch access" ON public.staff_branch_access
+  FOR UPDATE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
 
 -- Super Admin RLS for public.plans
 DROP POLICY IF EXISTS "super_admin_select_plans" ON public.plans;
