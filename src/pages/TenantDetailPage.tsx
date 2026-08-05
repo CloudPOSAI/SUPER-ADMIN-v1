@@ -223,7 +223,7 @@ export default function TenantDetailPage() {
             <div className="card-header-with-action">
               <h3 className="detail-card-title">License Information</h3>
               <div className="header-action-group">
-                <button className="btn btn-ghost btn-xs" onClick={() => setShowChangePlanModal(true)}>Change Plan</button>
+                <button className="btn btn-primary btn-xs" onClick={() => setShowChangePlanModal(true)}>Change Plan</button>
                 <button className="btn btn-success btn-xs" onClick={() => setShowExtendModal(true)}>Extend License</button>
               </div>
             </div>
