@@ -5,6 +5,8 @@
 
 /* --- CSS Custom Properties (Design Tokens) --- */
 :root {
+  color-scheme: dark;
+
   /* Color Palette */
   --color-bg-primary: #0a0e1a;
   --color-bg-secondary: #111827;
@@ -94,6 +96,7 @@
 
 html {
   font-size: 16px;
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -247,7 +250,7 @@ a:hover {
   border-radius: var(--radius-md);
 }
 
-/* --- Form Inputs --- */
+/* --- Form Inputs & LOV Dropdowns --- */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -272,11 +275,39 @@ a:hover {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);
-  background: var(--color-bg-input);
+  background: #111827;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   outline: none;
   transition: all var(--transition-fast);
+  color-scheme: dark;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+/* LOV Options Dropdown Styling */
+select option,
+.form-select option {
+  background-color: #111827 !important;
+  color: #f9fafb !important;
+  padding: 10px 14px;
+}
+
+select option:hover,
+select option:focus,
+select option:checked,
+.form-select option:hover,
+.form-select option:focus,
+.form-select option:checked {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
 }
 
 .form-input:focus,
