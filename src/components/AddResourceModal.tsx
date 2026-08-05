@@ -69,8 +69,17 @@ export default function AddResourceModal({
           if (data.length > 0) setSelectedRoleId(data[0].id);
         }
       });
+
+      // Smart branch assignment default
+      if (branches.length === 1) {
+        setSelectedBranchId(branches[0].id);
+      } else if (memberType === 'owner' || memberType === 'partner') {
+        setSelectedBranchId('all');
+      } else {
+        setSelectedBranchId(''); // Requires explicit LOV selection for staff
+      }
     }
-  }, [mode]);
+  }, [mode, memberType, branches]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -390,11 +399,17 @@ export default function AddResourceModal({
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Branch Access</label>
-                <select className="form-select" value={selectedBranchId} onChange={(e) => setSelectedBranchId(e.target.value)}>
-                  <option value="all">All Branches (Recommended)</option>
+                <label className="form-label">Branch Access Assignment <span className="required">*</span></label>
+                <select
+                  className="form-select"
+                  value={selectedBranchId}
+                  onChange={(e) => setSelectedBranchId(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>-- Select Branch Assignment --</option>
+                  <option value="all">🌐 All Branches (Universal Access)</option>
                   {branches.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
+                    <option key={b.id} value={b.id}>🏢 {b.name}</option>
                   ))}
                 </select>
               </div>
