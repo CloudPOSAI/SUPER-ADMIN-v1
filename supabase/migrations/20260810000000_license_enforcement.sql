@@ -92,6 +92,40 @@ CREATE POLICY "Super admins can select all user profiles" ON public.users
   FOR SELECT TO authenticated
   USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
 
+-- Super Admin RLS for public.plans
+DROP POLICY IF EXISTS "super_admin_select_plans" ON public.plans;
+CREATE POLICY "super_admin_select_plans" ON public.plans
+  FOR SELECT TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "super_admin_insert_plans" ON public.plans;
+CREATE POLICY "super_admin_insert_plans" ON public.plans
+  FOR INSERT TO authenticated WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "super_admin_update_plans" ON public.plans;
+CREATE POLICY "super_admin_update_plans" ON public.plans
+  FOR UPDATE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "super_admin_delete_plans" ON public.plans;
+CREATE POLICY "super_admin_delete_plans" ON public.plans
+  FOR DELETE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+-- Super Admin RLS for public.subscriptions
+DROP POLICY IF EXISTS "super_admin_select_subscriptions" ON public.subscriptions;
+CREATE POLICY "super_admin_select_subscriptions" ON public.subscriptions
+  FOR SELECT TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "super_admin_insert_subscriptions" ON public.subscriptions;
+CREATE POLICY "super_admin_insert_subscriptions" ON public.subscriptions
+  FOR INSERT TO authenticated WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "super_admin_update_subscriptions" ON public.subscriptions;
+CREATE POLICY "super_admin_update_subscriptions" ON public.subscriptions
+  FOR UPDATE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
+DROP POLICY IF EXISTS "super_admin_delete_subscriptions" ON public.subscriptions;
+CREATE POLICY "super_admin_delete_subscriptions" ON public.subscriptions
+  FOR DELETE TO authenticated USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'is_super_admin') = 'true');
+
 -- ---------------------------------------------------------------------------
 -- 3. License Enforcement Helper Function
 -- ---------------------------------------------------------------------------
