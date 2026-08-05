@@ -55,7 +55,6 @@ export default function DashboardPage() {
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [extendModalOrg, setExtendModalOrg] = useState<Organization | null>(null);
-  const [extending, setExtending] = useState(false);
 
   useEffect(() => {
     fetchOrgs();
@@ -72,27 +71,6 @@ export default function DashboardPage() {
       setOrgs(data as Organization[]);
     }
     setLoading(false);
-  }
-
-  async function handleExtendLicense(orgId: string) {
-    setExtending(true);
-    const newExpiry = new Date();
-    newExpiry.setFullYear(newExpiry.getFullYear() + 1);
-
-    const { error } = await supabase
-      .from('organizations')
-      .update({
-        license_status: 'active',
-        license_starts_at: new Date().toISOString(),
-        license_expires_at: newExpiry.toISOString(),
-      })
-      .eq('id', orgId);
-
-    if (!error) {
-      await fetchOrgs();
-      setExtendModalOrg(null);
-    }
-    setExtending(false);
   }
 
   const totalOrgs = orgs.length;
