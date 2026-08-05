@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import OnboardPage from './pages/OnboardPage';
 import TenantDetailPage from './pages/TenantDetailPage';
+import PlansPage from './pages/PlansPage';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -68,6 +69,10 @@ function AppRoutes() {
       <Route
         path="/tenant/:orgId"
         element={<ProtectedRoute><TenantDetailPage /></ProtectedRoute>}
+      />
+      <Route
+        path="/plans"
+        element={<ProtectedRoute><PlansPage /></ProtectedRoute>}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -1,0 +1,149 @@
+.plans-page {
+  min-height: 100vh;
+}
+
+.nav-links {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: var(--space-6);
+}
+
+.nav-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.nav-link-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
+}
+
+.nav-link-btn.active {
+  color: var(--color-accent-light);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-6);
+}
+
+.plan-card {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+.plan-card.plan-inactive {
+  opacity: 0.65;
+  filter: grayscale(30%);
+}
+
+.plan-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.plan-name {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.plan-code {
+  font-size: var(--font-size-xs);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.plan-price-row {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.plan-price {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--color-success);
+}
+
+.plan-price-period {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-left: var(--space-2);
+}
+
+.plan-specs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+}
+
+.spec-item span {
+  color: var(--color-text-muted);
+}
+
+.spec-item strong {
+  color: var(--color-text-primary);
+}
+
+.plan-modules {
+  margin-bottom: var(--space-6);
+}
+
+.module-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.module-badges {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.module-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: 4px 8px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.plan-card-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.plan-empty-card {
+  text-align: center;
+  padding: var(--space-12);
+}

@@ -116,6 +116,12 @@ export default function DashboardPage() {
             </svg>
             <span className="nav-brand-text">CloudPOS <span className="nav-brand-accent">Super Admin</span></span>
           </div>
+
+          <div className="nav-links">
+            <button className="nav-link-btn active" onClick={() => navigate('/')}>Tenants</button>
+            <button className="nav-link-btn" onClick={() => navigate('/plans')}>Plans</button>
+          </div>
+
           <div className="nav-actions">
             <button id="nav-new-tenant" className="btn btn-primary" onClick={() => navigate('/onboard')}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
