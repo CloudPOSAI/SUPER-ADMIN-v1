@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import AddResourceModal, { type ModalMode } from '../components/AddResourceModal';
 import './TenantDetailPage.css';
 
 interface Organization {
@@ -78,6 +79,7 @@ export default function TenantDetailPage() {
   const [printers, setPrinters] = useState<Printer[]>([]);
   const [stockLocations, setStockLocations] = useState<StockLocation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalMode, setModalMode] = useState<ModalMode | null>(null);
 
   useEffect(() => {
     if (orgId) fetchAll();
@@ -190,11 +192,14 @@ export default function TenantDetailPage() {
 
           {/* Branches */}
           <div className="glass-card detail-card">
-            <h3 className="detail-card-title">Branches ({branches.length})</h3>
+            <div className="card-header-with-action">
+              <h3 className="detail-card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>Branches ({branches.length})</h3>
+              <button className="btn btn-primary btn-xs" onClick={() => setModalMode('branch')}>+ Add Branch</button>
+            </div>
             {branches.length === 0 ? (
               <p className="detail-empty">No branches found.</p>
             ) : (
-              <div className="detail-list">
+              <div className="detail-list" style={{ marginTop: 'var(--space-3)' }}>
                 {branches.map((b) => (
                   <div key={b.id} className="detail-list-item">
                     <div>
@@ -212,11 +217,14 @@ export default function TenantDetailPage() {
 
           {/* POS Terminals */}
           <div className="glass-card detail-card">
-            <h3 className="detail-card-title">POS Terminals ({terminals.length})</h3>
+            <div className="card-header-with-action">
+              <h3 className="detail-card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>POS Terminals ({terminals.length})</h3>
+              <button className="btn btn-primary btn-xs" onClick={() => setModalMode('terminal')} disabled={branches.length === 0}>+ Add Terminal</button>
+            </div>
             {terminals.length === 0 ? (
               <p className="detail-empty">No POS terminals provisioned.</p>
             ) : (
-              <div className="detail-list">
+              <div className="detail-list" style={{ marginTop: 'var(--space-3)' }}>
                 {terminals.map((t) => (
                   <div key={t.id} className="detail-list-item">
                     <div>
@@ -234,11 +242,14 @@ export default function TenantDetailPage() {
 
           {/* Printers */}
           <div className="glass-card detail-card">
-            <h3 className="detail-card-title">Printers ({printers.length})</h3>
+            <div className="card-header-with-action">
+              <h3 className="detail-card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>Printers ({printers.length})</h3>
+              <button className="btn btn-primary btn-xs" onClick={() => setModalMode('printer')} disabled={branches.length === 0}>+ Add Printer</button>
+            </div>
             {printers.length === 0 ? (
               <p className="detail-empty">No printers provisioned.</p>
             ) : (
-              <div className="detail-list">
+              <div className="detail-list" style={{ marginTop: 'var(--space-3)' }}>
                 {printers.map((p) => (
                   <div key={p.id} className="detail-list-item">
                     <div>
@@ -256,11 +267,14 @@ export default function TenantDetailPage() {
 
           {/* Inventory Stock Locations */}
           <div className="glass-card detail-card" style={{ gridColumn: '1 / -1' }}>
-            <h3 className="detail-card-title">Stock & Warehouse Locations ({stockLocations.length})</h3>
+            <div className="card-header-with-action">
+              <h3 className="detail-card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>Stock & Warehouse Locations ({stockLocations.length})</h3>
+              <button className="btn btn-primary btn-xs" onClick={() => setModalMode('stock_location')} disabled={branches.length === 0}>+ Add Location</button>
+            </div>
             {stockLocations.length === 0 ? (
               <p className="detail-empty">No stock locations provisioned.</p>
             ) : (
-              <table className="data-table">
+              <table className="data-table" style={{ marginTop: 'var(--space-3)' }}>
                 <thead>
                   <tr>
                     <th>Location Code</th>
@@ -291,11 +305,14 @@ export default function TenantDetailPage() {
 
           {/* Members */}
           <div className="glass-card detail-card" style={{ gridColumn: '1 / -1' }}>
-            <h3 className="detail-card-title">Members ({members.length})</h3>
+            <div className="card-header-with-action">
+              <h3 className="detail-card-title" style={{ marginBottom: 0, borderBottom: 'none' }}>Members ({members.length})</h3>
+              <button className="btn btn-primary btn-xs" onClick={() => setModalMode('member')}>+ Add Member</button>
+            </div>
             {members.length === 0 ? (
               <p className="detail-empty">No members found.</p>
             ) : (
-              <table className="data-table">
+              <table className="data-table" style={{ marginTop: 'var(--space-3)' }}>
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -325,6 +342,17 @@ export default function TenantDetailPage() {
           </div>
         </div>
       </div>
+
+      {modalMode && org && (
+        <AddResourceModal
+          mode={modalMode}
+          orgId={org.id}
+          orgName={org.legal_name}
+          branches={branches}
+          onClose={() => setModalMode(null)}
+          onSuccess={fetchAll}
+        />
+      )}
     </div>
   );
 }
